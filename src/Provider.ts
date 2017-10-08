@@ -10,7 +10,6 @@ export interface ProviderProps {
 
 export interface ProviderContext {
   [key: string]: cruiser.Store<any>;
-
 }
 
 export class Provider extends React.PureComponent<ProviderProps, any> {
