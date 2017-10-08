@@ -2,19 +2,20 @@ import * as React from "react";
 import * as cruiser from "cruiser";
 import { ProviderContext } from "./Provider";
 
-export interface PickPropsFunction {
-  (state: object, ownProps: object): object;
+export interface PickPropsFunction<T, U> {
+  (state: T, ownProps: U): object;
 }
 
-export interface BindActionsFunction {
+export interface BindActionsFunction<T> {
   (reduce: cruiser.Reducer<object>): object;
+  (reduce: cruiser.Reducer<T>): object;
 }
 
 export interface HigherOrderComponentFactory {
   (Component: React.Component<any, any>): React.Component<any, any>;
 }
 
-function defaultBindActionsToProps(reduce: Function): object {
+function defaultBindActionsToProps<T>(reduce: cruiser.Reducer<T>): object {
   return { reduce };
 }
 
@@ -24,9 +25,9 @@ function defaultBindActionsToProps(reduce: Function): object {
  *
  * This is analogous to React-Redux's connect() method.
  */
-export function withStore(
-  pickPropsFromState: PickPropsFunction,
-  bindActionsToProps: BindActionsFunction = defaultBindActionsToProps
+export function withStore<T, U>(
+  pickPropsFromState: PickPropsFunction<T, U>,
+  bindActionsToProps: BindActionsFunction<T> = defaultBindActionsToProps
 ): HigherOrderComponentFactory {
   return function (Component: React.Component): any {
     return class extends React.Component<any, any> {
@@ -63,10 +64,15 @@ export function withStore(
 
       render(): JSX.Element {
         var { children, ...ownProps } = this.props;
-        var propsFromStore = pickPropsFromState(this.store.getState(), ownProps);
+        var stateFromStore = this.store.getState() as any;
+        var propsFromStore = pickPropsFromState(stateFromStore, ownProps);
+        var boundActions = this.boundActions;
 
         return (
-          <Component {...ownProps} {...propsFromStore}>
+          <Component
+            {...ownProps}
+            {...boundActions}
+            {...propsFromStore}>
             {children}
           </Component>
         );
